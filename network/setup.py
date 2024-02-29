@@ -28,6 +28,8 @@ def generate_setup_sh(x, system='openwrt'):
 
         for index in range(len(data)):
             print(data[index])
+            if os.path.exists('setup') == False:
+                os.mkdir('setup')
             setup_sh = os.path.join('setup', f'setup_{index}.sh')
             with open(setup_sh, 'w') as f:
                 f.write('#!/bin/bash\n')

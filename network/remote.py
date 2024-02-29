@@ -2,15 +2,16 @@ import paramiko
 import os
 
 # 服务器列表，每个服务器是一个字典，包含IP、端口、用户名和对应的sh文件路径
+
 servers = [
-    {"ip": "47.94.8.103", "port": 22, "username": "root", "script": "/startup/startup_0.sh", "pem_file": "minicernet.pem"},
-    {"ip": "139.224.223.30", "port": 22, "username": "root", "script": "/startup/startup_1.sh", "pem_file": "minicernet.pem"},
-    {"ip": "118.178.238.89", "port": 22, "username": "root", "script": "/startup/startup_2.sh", "pem_file": "minicernet.pem"},
-    {"ip": "47.104.105.204", "port": 22, "username": "root", "script": "/startup/startup_3.sh", "pem_file": "minicernet.pem"},
-    {"ip": "120.79.158.94", "port": 22, "username": "root", "script": "/startup/startup_4.sh", "pem_file": "minicernet.pem"},
-    {"ip": "8.134.59.19", "port": 22, "username": "root", "script": "/startup/startup_5.sh", "pem_file": "minicernet.pem"},
-    {"ip": "47.108.213.86", "port": 22, "username": "root", "script": "/startup/startup_6.sh", "pem_file": "minicernet.pem"},
-    {"ip": "39.104.74.124", "port": 22, "username": "root", "script": "/startup/startup_7.sh", "pem_file": "minicernet.pem"}
+    {"ip": "47.94.8.103", "port": 22, "username": "root", "script": "/setup/setup_0.sh", "pem_file": "minicernet.pem"},
+    {"ip": "139.224.223.30", "port": 22, "username": "root", "script": "/setup/setup_1.sh", "pem_file": "minicernet.pem"},
+    {"ip": "118.178.238.89", "port": 22, "username": "root", "script": "/setup/setup_2.sh", "pem_file": "minicernet.pem"},
+    {"ip": "47.104.105.204", "port": 22, "username": "root", "script": "/setup/setup_3.sh", "pem_file": "minicernet.pem"},
+    {"ip": "120.79.158.94", "port": 22, "username": "root", "script": "/setup/setup_4.sh", "pem_file": "minicernet.pem"},
+    {"ip": "8.134.59.19", "port": 22, "username": "root", "script": "/setup/setup_5.sh", "pem_file": "minicernet.pem"},
+    {"ip": "47.108.213.86", "port": 22, "username": "root", "script": "/setup/setup_6.sh", "pem_file": "minicernet.pem"},
+    {"ip": "39.104.74.124", "port": 22, "username": "root", "script": "/setup/setup_7.sh", "pem_file": "minicernet.pem"}
 ]
 
 # 服务器上的sh文件存放路径
