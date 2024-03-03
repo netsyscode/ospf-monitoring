@@ -1,57 +1,75 @@
 import paramiko
 import os
+import json
+import argparse
 
-# 服务器列表，每个服务器是一个字典，包含IP、端口、用户名和对应的sh文件路径
+SSH_FAILED = 0
+SSH_SUCCESS = 1
+EXEC_SUCCESS = 2 
 
-servers = [
-    {"ip": "47.94.8.103", "port": 22, "username": "root", "script": "/setup/setup_0.sh", "pem_file": "minicernet.pem"},
-    {"ip": "139.224.223.30", "port": 22, "username": "root", "script": "/setup/setup_1.sh", "pem_file": "minicernet.pem"},
-    {"ip": "118.178.238.89", "port": 22, "username": "root", "script": "/setup/setup_2.sh", "pem_file": "minicernet.pem"},
-    {"ip": "47.104.105.204", "port": 22, "username": "root", "script": "/setup/setup_3.sh", "pem_file": "minicernet.pem"},
-    {"ip": "120.79.158.94", "port": 22, "username": "root", "script": "/setup/setup_4.sh", "pem_file": "minicernet.pem"},
-    {"ip": "8.134.59.19", "port": 22, "username": "root", "script": "/setup/setup_5.sh", "pem_file": "minicernet.pem"},
-    {"ip": "47.108.213.86", "port": 22, "username": "root", "script": "/setup/setup_6.sh", "pem_file": "minicernet.pem"},
-    {"ip": "39.104.74.124", "port": 22, "username": "root", "script": "/setup/setup_7.sh", "pem_file": "minicernet.pem"}
-]
-
-# 服务器上的sh文件存放路径
-remote_sh_base_path = "/remote/path/to/scripts/"
-
-def send_and_execute_script(server_info):
+def send_and_execute_script(server_info, network="minicernet"):
+    process = SSH_FAILED
     ip = server_info["ip"]
     port = server_info["port"]
     username = server_info["username"]
-    local_sh_path = server_info["script"]
-    remote_sh_path = remote_sh_base_path + os.path.basename(local_sh_path)
-    pem_file = server_info["pem_file"]
+    local_sh_path = os.path.join('setup',os.path.basename(server_info["script"]))
+    pem_file = os.path.join("topo", network, server_info["pem_file"])
     
     # 创建SSH客户端
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     try:
-        # 使用.pem文件创建RSAKey对象
         key = paramiko.RSAKey.from_private_key_file(pem_file)
-        
+        print(f"Connecting to {ip}")
         # 连接服务器
         ssh.connect(ip, port=port, username=username, pkey=key)
-        sftp = ssh.open_sftp()
-        
-        # 发送sh文件到服务器
-        sftp.put(local_sh_path, remote_sh_path)
-        sftp.close()
-        
-        # 在服务器上将sh文件设置为可执行
-        ssh.exec_command(f"chmod +x {remote_sh_path}")
-        
-        # 执行sh文件
-        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(f"bash {remote_sh_path}")
-        print(ssh_stdout.read().decode())  # 打印执行结果
+        print(f"Connected to {ip}")
+        process = SSH_SUCCESS
+        # 读取sh文件内容并执行
+        with open(os.path.abspath(local_sh_path), 'r') as f:
+            sh_content = f.read()
+        # 直接执行sh文件内容并输出结果
+        stdin, stdout, stderr = ssh.exec_command(sh_content)
+        res, err = stdout.read(), stderr.read()
+        result = res if res else err
+        print(result.decode().strip())
+        print("-" * 60)
+        print(f"Successfully executed the script on {ip}")
+        print("-" * 60)
+        process = EXEC_SUCCESS
     except Exception as e:
         print(f"Failed to connect or execute on {ip}: {e}")
     finally:
         ssh.close()
+    return process
 
-# 遍历服务器列表，发送并执行脚本
-for server in servers:
-    send_and_execute_script(server)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--network", help="network", default="minicernet", type=str)
+    args = parser.parse_args()
+    
+    #paramiko.util.log_to_file("paramiko.log", level=paramiko.util.DEBUG)
+    
+    # Read the JSON file
+    with open(os.path.join("topo", args.network, "pwd.json")) as f:
+        servers = json.load(f)
+
+    results = []
+    for server in servers:
+        result = send_and_execute_script(server, network=args.network)
+        results.append(result)
+    # 显示执行结果，分三类，并且输出各类的数量与IP
+    print(f"EXEC_SUCCESS: {results.count(EXEC_SUCCESS)}")
+    print(f"SSH_SUCCESS but EXEC_FAILED: {results.count(SSH_SUCCESS)}")
+    print(f"SSH_FAILED: {results.count(SSH_FAILED)}")
+    # 没有失败则不显示
+    if results.count(SSH_FAILED+SSH_SUCCESS) == 0:
+        print("All servers are successfully executed.") 
+    else:
+        print("Failed IPs:")
+        for server, result in zip(servers, results):
+            if result == SSH_FAILED:
+                print(server["ip"])
+

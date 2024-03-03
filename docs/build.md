@@ -20,11 +20,10 @@
 
 ### 2.服务器密码
 
-https://cloud.tsinghua.edu.cn/f/6bd6dc399ec649dd85cd/?dl=1
+
 
 ### 3.拓扑
 
-https://cloud.tsinghua.edu.cn/f/3a60c8b8f0c84044a146/?dl=1
 
 
 

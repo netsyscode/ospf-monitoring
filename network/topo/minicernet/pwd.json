@@ -1,0 +1,10 @@
+[
+    {"index": 0, "name": "bj1", "ip": "59.110.15.151", "port": 22, "username": "root", "script": "/setup/setup_0.sh", "pem_file": "ssh.pem"},
+    {"index": 1, "name": "sh1", "ip": "139.224.49.61", "port": 22, "username": "root", "script": "/setup/setup_1.sh", "pem_file": "ssh.pem"},
+    {"index": 2, "name": "hz1", "ip": "118.178.93.35", "port": 22, "username": "root", "script": "/setup/setup_2.sh", "pem_file": "ssh.pem"},
+    {"index": 3, "name": "qd1", "ip": "118.190.208.48", "port": 22, "username": "root", "script": "/setup/setup_3.sh", "pem_file": "ssh.pem"},
+    {"index": 4, "name": "sz1", "ip": "47.107.109.139", "port": 22, "username": "root", "script": "/setup/setup_4.sh", "pem_file": "ssh.pem"},
+    {"index": 5, "name": "gz1", "ip": "8.138.56.255", "port": 22, "username": "root", "script": "/setup/setup_5.sh", "pem_file": "ssh.pem"},
+    {"index": 6, "name": "cd1", "ip": "47.108.213.86", "port": 22, "username": "root", "script": "/setup/setup_6.sh", "pem_file": "ssh.pem"},
+    {"index": 7, "name": "hh1", "ip": "39.104.69.181", "port": 22, "username": "root", "script": "/setup/setup_7.sh", "pem_file": "ssh.pem"}
+]

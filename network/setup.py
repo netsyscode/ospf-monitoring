@@ -2,10 +2,12 @@
 import os, sys, json
 import networkx as nx
 import matplotlib.pyplot as plt
+import argparse
+import os
 
 # 生成setup_index.sh
 def generate_setup_sh(x, system='openwrt'):
-    with open(os.path.join('topo', x), 'r') as f:
+    with open(os.path.join('topo', x, 'topo.json'), 'r') as f:
         data = json.load(f)
         # 构建nx拓扑图
         G = nx.Graph()
@@ -57,6 +59,7 @@ def generate_setup_sh(x, system='openwrt'):
                 else:
                     f.write('systemctl restart frr\n')
                 
+                
                 # 清空原配置
                 # 获取所有以gre开头的隧道名称
                 f.write('tunnels=$(ip tunnel show | grep "^gre" | cut -d: -f1)\n')
@@ -72,19 +75,29 @@ def generate_setup_sh(x, system='openwrt'):
                 # 根据相连的点index列表与其外网IP地址，内网IP地址，配置GRE隧道
                 for i,nei in enumerate(data[index]['Connected']):
                     f.write(f'ip tunnel add gre-{i} mode gre remote {data[nei]["OuterIP"]} local {data[index]["OuterIP"]} ttl 255\n')
-                    f.write(f'ip link set gre-{i} up\n')
+                    #f.write(f'ip link set gre-{i} up\n')
                     e = G.edges[nei,index]['index']
                     if nei > index:
                         f.write(f'ip addr add 192.168.{e}.1/24 dev gre-{i}\n')
-                        #f.write(f'ip addr add 192.168.{e}.1/24 peer 192.168.{e}.2/24  dev gre-{i}\n')
+                        #f.write(f'ip addr add 192.168.{e}.1 peer 192.168.{e}.2/24  dev gre-{i}\n')
                     else:
                         f.write(f'ip addr add 192.168.{e}.2/24 dev gre-{i}\n')
-                        #f.write(f'ip addr add 192.168.{e}.2/24 peer 192.168.{e}.1/24 dev gre-{i}\n')
+                        #f.write(f'ip addr add 192.168.{e}.2 peer 192.168.{e}.1/24 dev gre-{i}\n')
                     if system == 'centos':
                         f.write(f'sysctl -w net.ipv4.conf.gre-{i}.rp_filter=0\n')
                     intranetwork.add(f'192.168.{e}.0/24')
                     f.write(f'echo "Creating GRE tunnel gre-{i} with remote {data[nei]["OuterIP"]} and local {data[index]["OuterIP"]}"\n')
                 f.write(f'sysctl -p\n')
+                
+                if system == 'openwrt':
+                    f.write('uci add firewall rule\n')
+                    f.write('uci set firewall.@rule[-1].target=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@rule[-1].proto=\'gre\'\n')
+                    f.write('uci set firewall.@rule[-1].src=\'lan\'\n')
+                    f.write('uci set firewall.@rule[-1].dest=\'wan\'\n')
+                    f.write('uci commit firewall\n')
+                    f.write('/etc/init.d/firewall restart\n')
+
                 # 配置FRR
                 f.write('echo \"configure terminal\n')
                 for i,nei in enumerate(data[index]['Connected']):
@@ -107,12 +120,9 @@ def generate_setup_sh(x, system='openwrt'):
                 
 # 设置输入参数为json文件
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        generate_setup_sh(sys.argv[1], sys.argv[2])
-    elif len(sys.argv) == 2:
-        generate_setup_sh(sys.argv[1])
-    else:
-        print("Usage: python setup.py <json_file> [system]")
-        print("system: openwrt(default) or centos")
-        exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--network", help="network", default="minicernet", type=str)
+    parser.add_argument("--system", help="system: openwrt(default) or centos", default="openwrt", type=str)
+    args = parser.parse_args()
+    generate_setup_sh(args.network, args.system)
     print("setup.sh has been generated.")
