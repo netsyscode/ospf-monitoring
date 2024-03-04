@@ -23,3 +23,6 @@ Thumbs.db
 
 # Ignore network files
 network/setup/
+
+# Ignore NOT DONE files
+controller/frontend/ospf-monitoring/
