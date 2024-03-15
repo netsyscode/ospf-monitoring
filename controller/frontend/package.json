@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "element-plus": "^2.6.1"
+  },
+  "devDependencies": {
+    "vite-plugin-windicss": "^1.9.3",
+    "windicss": "^3.5.6"
+  }
+}

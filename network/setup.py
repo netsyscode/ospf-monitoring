@@ -78,18 +78,29 @@ def generate_setup_sh(x, system='openwrt'):
                     #f.write(f'ip link set gre-{i} up\n')
                     e = G.edges[nei,index]['index']
                     if nei > index:
-                        f.write(f'ip addr add 192.168.{e}.1/24 dev gre-{i}\n')
-                        #f.write(f'ip addr add 192.168.{e}.1 peer 192.168.{e}.2/24  dev gre-{i}\n')
+                        f.write(f'ip addr add 192.168.{e}.1 dev gre-{i}\n')
+                        #f.write(f'ip addr add 192.168.{e}.1 peer 192.168.{e}.2  dev gre-{i}\n')
                     else:
-                        f.write(f'ip addr add 192.168.{e}.2/24 dev gre-{i}\n')
-                        #f.write(f'ip addr add 192.168.{e}.2 peer 192.168.{e}.1/24 dev gre-{i}\n')
+                        f.write(f'ip addr add 192.168.{e}.2 dev gre-{i}\n')
+                        #f.write(f'ip addr add 192.168.{e}.2 peer 192.168.{e}.1 dev gre-{i}\n')
                     if system == 'centos':
                         f.write(f'sysctl -w net.ipv4.conf.gre-{i}.rp_filter=0\n')
                     intranetwork.add(f'192.168.{e}.0/24')
+                    f.write(f'ip link set gre-{i} up\n')
+                    f.write(f'ip route add 192.168.{e}.0/24 dev gre-{i}\n')
                     f.write(f'echo "Creating GRE tunnel gre-{i} with remote {data[nei]["OuterIP"]} and local {data[index]["OuterIP"]}"\n')
                 f.write(f'sysctl -p\n')
                 
                 if system == 'openwrt':
+                    f.write('uci set firewall.@defaults[0].syn_flood=\'1\'\n')
+                    f.write('uci set firewall.@defaults[0].input=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@defaults[0].output=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@defaults[0].forward=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@zone[1].input=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@zone[1].output=\'ACCEPT\'\n')
+                    f.write('uci set firewall.@zone[1].forward=\'ACCEPT\'\n')
+                    f.write('uci commit firewall\n')
+
                     f.write('uci add firewall rule\n')
                     f.write('uci set firewall.@rule[-1].target=\'ACCEPT\'\n')
                     f.write('uci set firewall.@rule[-1].proto=\'gre\'\n')
@@ -122,7 +133,7 @@ def generate_setup_sh(x, system='openwrt'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--network", help="network", default="minicernet", type=str)
-    parser.add_argument("--system", help="system: openwrt(default) or centos", default="openwrt", type=str)
+    parser.add_argument("--system", help="system: openwrt(default) or centos", default="centos", type=str)
     args = parser.parse_args()
     generate_setup_sh(args.network, args.system)
     print("setup.sh has been generated.")
